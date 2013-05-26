@@ -19,6 +19,14 @@ Blukii.discover(function(blukii) {
         blukii.discoverCharacteristics(callback);
       },
       function(callback) {
+        console.log('readBatteryPercentage');
+        blukii.readBatteryPercentage(function(percentage) {
+          console.log('percentage = ' + percentage + ' %');
+
+          callback();
+        });
+      },
+      function(callback) {
         console.log('enableMobileWarning');
         blukii.enableMobileWarning(callback);
       },

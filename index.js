@@ -5,20 +5,21 @@ var util = require('util');
 
 var noble = require('noble');
 
-/*
+// Service UUID's:
+// BLServiceAccelerometer =  0000FEB0-0000-1000-8000-00805F9B34FB
 
-BLServiceAccelerometer =  0000FEB0-0000-1000-8000-00805F9B34FB
+// BLServiceMobileWarning =  0000E000-0000-1000-8000-00805F9B34FB
+// BLServiceMobileAlarm =    0000E100-0000-1000-8000-00805F9B34FB
+// BLServiceMobileFinder =   0000E200-0000-1000-8000-00805F9B34FB
+// BLServiceTemperature =    0000E300-0000-1000-8000-00805F9B34FB
+// BLServiceRecording =      0000E400-0000-1000-8000-00805F9B34FB
+// BLServiceBackgroundMode = 0000E500-0000-1000-8000-00805F9B34FB
+// BLServiceSwitch =         0000E700-0000-1000-8000-00805F9B34FB
 
-BLServiceMobileWarning =  0000E000-0000-1000-8000-00805F9B34FB
-BLServiceMobileAlarm =    0000E100-0000-1000-8000-00805F9B34FB
-BLServiceMobileFinder =   0000E200-0000-1000-8000-00805F9B34FB
-BLServiceTemperature =    0000E300-0000-1000-8000-00805F9B34FB
-BLServiceRecording =      0000E400-0000-1000-8000-00805F9B34FB
-BLServiceBackgroundMode = 0000E500-0000-1000-8000-00805F9B34FB
-BLServiceSwitch =         0000E700-0000-1000-8000-00805F9B34FB
+// BLServiceBattery =        180F
 
-BLServiceBattery =        180F
-
+// Characteristic UUID's:
+//
 // BLServiceRecording
 // 0000e40100001000800000805f9b34fb: 0x01 start recording, 0x00 stop recording
 // 0000e40200001000800000805f9b34fb: input
@@ -30,7 +31,8 @@ BLServiceBattery =        180F
 // 0000e40800001000800000805f9b34fb: threshold 1 (16bit LE)
 //
 // 0000e41100001000800000805f9b34fb: value
-*/
+
+var BATTERY_UUID                                  = '2a19';
 
 var MOBILE_WARNING_ENABLE_UUID                    = '0000e00100001000800000805f9b34fb';
 var MOBILE_WARNING_MOTION_DETECTION_ENABLE_UUID   = '0000e00200001000800000805f9b34fb';
@@ -154,6 +156,14 @@ Blukii.prototype.readDataCharacteristic = function(uuid, callback) {
   this._characteristics[uuid].read(function(error, data) {
     callback(data);
   });
+};
+
+Blukii.prototype.readBatteryPercentage = function(callback) {
+  this.readDataCharacteristic(BATTERY_UUID, function(data) {
+    var percentage = data.readUInt8(0);
+
+    callback(percentage);
+  }.bind(this));
 };
 
 Blukii.prototype.enableMobileWarning = function(callback) {
