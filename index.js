@@ -5,6 +5,55 @@ var util = require('util');
 
 var noble = require('noble');
 
+/*
+
+BLServiceAccelerometer =  0000FEB0-0000-1000-8000-00805F9B34FB
+
+BLServiceMobileWarning =  0000E000-0000-1000-8000-00805F9B34FB
+BLServiceMobileAlarm =    0000E100-0000-1000-8000-00805F9B34FB
+BLServiceMobileFinder =   0000E200-0000-1000-8000-00805F9B34FB
+BLServiceTemperature =    0000E300-0000-1000-8000-00805F9B34FB
+BLServiceRecording =      0000E400-0000-1000-8000-00805F9B34FB
+BLServiceBackgroundMode = 0000E500-0000-1000-8000-00805F9B34FB
+BLServiceSwitch =         0000E700-0000-1000-8000-00805F9B34FB
+
+BLServiceBattery =        180F
+
+// BLServiceTemperature
+// 0000e30100001000800000805f9b34fb: 0x01 = enabled, 0x00 = disabled
+// 0000e30200001000800000805f9b34fb: 0x01 = internal, 0x02 = external
+// 0000e30300001000800000805f9b34fb:
+// internal: value * 1.8 
+// external: value
+
+
+// BLServiceSwitch
+// 0000e70100001000800000805f9b34fb: 0x01 enable, 0x00 disable
+// 0000e70200001000800000805f9b34fb: notify 0x60 down, 0x50 up
+
+// BLServiceMobileWarning
+// 0000e00100001000800000805f9b34fb: 0x01 enable, 0x00 disable
+// 0000e00200001000800000805f9b34fb: 0x01 enable, 0x00 disable motion detection
+// 0000e00300001000800000805f9b34fb: motion threshold (16bit LE)
+// 0000e00400001000800000805f9b34fb: notify
+
+// BLServiceRecording
+// 0000e40100001000800000805f9b34fb: 0x01 start recording, 0x00 stop recording
+// 0000e40200001000800000805f9b34fb: input
+// 0000e40300001000800000805f9b34fb: interval (32bit LE)
+//
+// 0000e40500001000800000805f9b34fb: method
+// 
+//
+// 0000e40800001000800000805f9b34fb: threshold 1 (16bit LE)
+//
+// 0000e41100001000800000805f9b34fb: value
+*/
+
+var TEMPERATURE_ENABLE_UUID = '0000e30100001000800000805f9b34fb';
+var TEMPERATURE_SENSOR_UUID = '0000e30200001000800000805f9b34fb';
+var TEMPERATURE_VALUE_UUID  = '0000e30300001000800000805f9b34fb';
+
 function Blukii(peripheral) {
   this._peripheral = peripheral;
   this._services = {};
@@ -115,6 +164,38 @@ Blukii.prototype.readDataCharacteristic = function(uuid, callback) {
   this._characteristics[uuid].read(function(error, data) {
     callback(data);
   });
+};
+
+Blukii.prototype.enableTemperatureSensor = function(callback) {
+  this.enableConfigCharacteristic(TEMPERATURE_ENABLE_UUID, callback);
+};
+
+Blukii.prototype.disableTemperatureSensor = function(callback) {
+  this.disableConfigCharacteristic(TEMPERATURE_ENABLE_UUID, callback);
+};
+
+Blukii.prototype.selectTemperatureSensor = function(sensor, callback) {
+  if (sensor === 'internal') {
+    this._temperatureSensor = 1;
+  } else if (sensor === 'external') {
+    this._temperatureSensor = 2;
+  } else {
+    this._temperatureSensor = 0;
+  }
+
+  this.writeCharacteristic(TEMPERATURE_SENSOR_UUID, new Buffer(this._temperatureSensor), callback);
+};
+
+Blukii.prototype.readTemperatureSensor = function(callback) {
+  this.readDataCharacteristic(TEMPERATURE_VALUE_UUID, function(data) {
+    var temperature = data.readInt8(0);
+
+    if (this._temperatureSensor === 1) {
+      temperature *= 1.8;
+    }
+
+    callback(temperature);
+  }.bind(this));
 };
 
 module.exports = Blukii;
