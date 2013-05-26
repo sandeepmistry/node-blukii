@@ -19,6 +19,28 @@ Blukii.discover(function(blukii) {
         blukii.discoverCharacteristics(callback);
       },
       function(callback) {
+        console.log('enableMobileWarning');
+        blukii.enableMobileWarning(callback);
+      },
+      function(callback) {
+        console.log('setMobileWarningThreshold');
+        blukii.setMobileWarningThreshold(5000, callback);
+      },
+      function(callback) {
+        blukii.on('mobileWarning', function(on) {
+          console.log('mobileWarning on = ' + on);
+
+          callback();
+        });
+
+        blukii.notifyMobileWarning(function() {
+        });
+      },
+      function(callback) {
+        console.log('disableMobileWarning');
+        blukii.disableMobileWarning(callback);
+      },
+      function(callback) {
         console.log('enableTemperatureSensor');
         blukii.enableTemperatureSensor(callback);
       },

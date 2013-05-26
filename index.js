@@ -19,17 +19,6 @@ BLServiceSwitch =         0000E700-0000-1000-8000-00805F9B34FB
 
 BLServiceBattery =        180F
 
-
-// BLServiceSwitch
-// 0000e70100001000800000805f9b34fb: 0x01 enable, 0x00 disable
-// 0000e70200001000800000805f9b34fb: notify 0x60 down, 0x50 up
-
-// BLServiceMobileWarning
-// 0000e00100001000800000805f9b34fb: 0x01 enable, 0x00 disable
-// 0000e00200001000800000805f9b34fb: 0x01 enable, 0x00 disable motion detection
-// 0000e00300001000800000805f9b34fb: motion threshold (16bit LE)
-// 0000e00400001000800000805f9b34fb: notify
-
 // BLServiceRecording
 // 0000e40100001000800000805f9b34fb: 0x01 start recording, 0x00 stop recording
 // 0000e40200001000800000805f9b34fb: input
@@ -43,12 +32,17 @@ BLServiceBattery =        180F
 // 0000e41100001000800000805f9b34fb: value
 */
 
-var TEMPERATURE_ENABLE_UUID = '0000e30100001000800000805f9b34fb';
-var TEMPERATURE_SENSOR_UUID = '0000e30200001000800000805f9b34fb';
-var TEMPERATURE_VALUE_UUID  = '0000e30300001000800000805f9b34fb';
+var MOBILE_WARNING_ENABLE_UUID                    = '0000e00100001000800000805f9b34fb';
+var MOBILE_WARNING_MOTION_DETECTION_ENABLE_UUID   = '0000e00200001000800000805f9b34fb';
+var MOBILE_WARNING_MOTION_THRESHOLD_UUID          = '0000e00300001000800000805f9b34fb';
+var MOBILE_WARNING_NOTIFY_UUID                    = '0000e00400001000800000805f9b34fb';
 
-var SWITCH_ENABLE_UUID      = '0000e70100001000800000805f9b34fb';
-var SWITCH_NOTIFY_UUID      = '0000e70200001000800000805f9b34fb';
+var TEMPERATURE_ENABLE_UUID                       = '0000e30100001000800000805f9b34fb';
+var TEMPERATURE_SENSOR_UUID                       = '0000e30200001000800000805f9b34fb';
+var TEMPERATURE_VALUE_UUID                        = '0000e30300001000800000805f9b34fb';
+
+var SWITCH_ENABLE_UUID                            = '0000e70100001000800000805f9b34fb';
+var SWITCH_NOTIFY_UUID                            = '0000e70200001000800000805f9b34fb';
 
 function Blukii(peripheral) {
   this._peripheral = peripheral;
@@ -160,6 +154,37 @@ Blukii.prototype.readDataCharacteristic = function(uuid, callback) {
   this._characteristics[uuid].read(function(error, data) {
     callback(data);
   });
+};
+
+Blukii.prototype.enableMobileWarning = function(callback) {
+  this.enableConfigCharacteristic(MOBILE_WARNING_ENABLE_UUID, callback);
+};
+
+Blukii.prototype.disableMobileWarning = function(callback) {
+  this.disableConfigCharacteristic(MOBILE_WARNING_ENABLE_UUID, callback);
+};
+
+Blukii.prototype.setMobileWarningThreshold = function(threshold, callback) {
+  var data = new Buffer(2);
+  data.writeUInt16LE(threshold, 0);
+
+  this.writeCharacteristic(MOBILE_WARNING_MOTION_THRESHOLD_UUID, data, function() {
+    this.enableConfigCharacteristic(MOBILE_WARNING_MOTION_DETECTION_ENABLE_UUID, callback);
+  }.bind(this));
+};
+
+Blukii.prototype.onMobileWarning = function(data) {
+  var on = (data.readUInt8(0) & 0x01) ? true : false;
+
+  this.emit('mobileWarning', on);
+};
+
+Blukii.prototype.notifyMobileWarning = function(callback) {
+  this.notifyCharacteristic(MOBILE_WARNING_NOTIFY_UUID, true, this.onMobileWarning.bind(this), callback);
+};
+
+Blukii.prototype.unnotifyMobileWarning = function(callback) {
+  this.notifyCharacteristic(MOBILE_WARNING_NOTIFY_UUID, false, this.onMobileWarning.bind(this), callback);
 };
 
 Blukii.prototype.enableTemperatureSensor = function(callback) {
