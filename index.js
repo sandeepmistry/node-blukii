@@ -19,13 +19,6 @@ BLServiceSwitch =         0000E700-0000-1000-8000-00805F9B34FB
 
 BLServiceBattery =        180F
 
-// BLServiceTemperature
-// 0000e30100001000800000805f9b34fb: 0x01 = enabled, 0x00 = disabled
-// 0000e30200001000800000805f9b34fb: 0x01 = internal, 0x02 = external
-// 0000e30300001000800000805f9b34fb:
-// internal: value * 1.8 
-// external: value
-
 
 // BLServiceSwitch
 // 0000e70100001000800000805f9b34fb: 0x01 enable, 0x00 disable
@@ -53,6 +46,9 @@ BLServiceBattery =        180F
 var TEMPERATURE_ENABLE_UUID = '0000e30100001000800000805f9b34fb';
 var TEMPERATURE_SENSOR_UUID = '0000e30200001000800000805f9b34fb';
 var TEMPERATURE_VALUE_UUID  = '0000e30300001000800000805f9b34fb';
+
+var SWITCH_ENABLE_UUID      = '0000e70100001000800000805f9b34fb';
+var SWITCH_NOTIFY_UUID      = '0000e70200001000800000805f9b34fb';
 
 function Blukii(peripheral) {
   this._peripheral = peripheral;
@@ -196,6 +192,28 @@ Blukii.prototype.readTemperatureSensor = function(callback) {
 
     callback(temperature);
   }.bind(this));
+};
+
+Blukii.prototype.enableSwitchSensor = function(callback) {
+  this.enableConfigCharacteristic(SWITCH_ENABLE_UUID, callback);
+};
+
+Blukii.prototype.disableSwitchSensor = function(callback) {
+  this.disableConfigCharacteristic(SWITCH_ENABLE_UUID, callback);
+};
+
+Blukii.prototype.onSwitchChange = function(data) {
+  var on = (data.readUInt8(0) & 0x50) ? true : false;
+
+  this.emit('switchChange', on);
+};
+
+Blukii.prototype.notifySwitch = function(callback) {
+  this.notifyCharacteristic(SWITCH_NOTIFY_UUID, true, this.onSwitchChange.bind(this), callback);
+};
+
+Blukii.prototype.unnotifySwitch = function(callback) {
+  this.notifyCharacteristic(SWITCH_NOTIFY_UUID, false, this.onSwitchChange.bind(this), callback);
 };
 
 module.exports = Blukii;

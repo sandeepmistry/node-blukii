@@ -34,7 +34,7 @@ Blukii.discover(function(blukii) {
 
             callback();
           });
-        }, 1000);
+        }, 250);
       },
       function(callback) {
         console.log('selectTemperatureSensor - external');
@@ -47,11 +47,29 @@ Blukii.discover(function(blukii) {
 
             callback();
           });
-        }, 1000);
+        }, 250);
       },
       function(callback) {
         console.log('disableTemperatureSensor');
         blukii.disableTemperatureSensor(callback);
+      },
+      function(callback) {
+        console.log('enableSwitchSensor');
+        blukii.enableSwitchSensor(callback);
+      },
+      function(callback) {
+        blukii.on('switchChange', function(on) {
+          console.log('switch on = ' + on);
+
+          callback();
+        });
+
+        blukii.notifySwitch(function() {
+        });
+      },
+      function(callback) {
+        console.log('disableSwitchSensor');
+        blukii.disableSwitchSensor(callback);
       },
       function(callback) {
         console.log('disconnect');
